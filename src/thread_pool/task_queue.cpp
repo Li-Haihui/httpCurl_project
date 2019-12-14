@@ -61,3 +61,13 @@ bool CTaskQueue::isEmpty()
     return flag;
 }
 
+void CTaskQueue::clear()
+{
+    pthread_mutex_lock(&m_mutex);
+    if(!m_taskQueue.empty())
+    {
+        m_taskQueue.clear();
+    }
+    pthread_mutex_unlock(&m_mutex);
+}
+

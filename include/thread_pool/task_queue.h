@@ -14,6 +14,7 @@ class CTaskQueue
         CBaseTask* pop();
         bool push_back(CBaseTask *task);
         bool isEmpty();
+        void clear();
     private:
         pthread_mutex_t m_mutex;
         std::queue<CBaseTask> m_taskQueue;
