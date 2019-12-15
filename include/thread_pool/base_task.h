@@ -5,11 +5,11 @@ class CBaseTask
 {
     public:
         CBaseTask(int taskID);
-        virtual ~CBaseTask();
-        virtual void workTaskFun(void *data)=0;
+        virtual ~CBaseTask(void);
+        virtual int workTaskFun();
         int getTaskID();
     private:
         int m_taskID;
-}
+};
 
 #endif

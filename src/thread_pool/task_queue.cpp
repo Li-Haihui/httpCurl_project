@@ -2,7 +2,6 @@
 
 CTaskQueue::CTaskQueue()
 {
-    int ret = 0;
     pthread_mutex_init(&m_mutex, NULL);
 }
 
@@ -39,7 +38,8 @@ CBaseTask* CTaskQueue::pop()
     pthread_mutex_lock(&m_mutex);
     if(!m_taskQueue.empty())
     {
-        task = m_taskQueue.pop();
+        task = m_taskQueue.front();
+		m_taskQueue.pop_front();
     }
     pthread_mutex_unlock(&m_mutex);
 
@@ -52,7 +52,7 @@ bool CTaskQueue::isEmpty()
     bool flag = false;
     
     pthread_mutex_lock(&m_mutex);
-    if(!m_taskQueue.empty())
+    if(m_taskQueue.empty())
     {
         flag = true;
     }

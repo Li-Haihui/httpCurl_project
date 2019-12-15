@@ -2,7 +2,7 @@
 #define _TASK_QUEUE_H
 
 #include <pthread.h>
-#include <queue>
+#include <deque>
 
 #include "base_task.h"
 
@@ -17,9 +17,9 @@ class CTaskQueue
         void clear();
     private:
         pthread_mutex_t m_mutex;
-        std::queue<CBaseTask> m_taskQueue;
+        std::deque<CBaseTask*> m_taskQueue;
          
-}
+};
 
 #endif
 
