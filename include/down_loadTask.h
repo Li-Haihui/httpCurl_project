@@ -37,11 +37,13 @@ class CHttpDown
 
         std::deque<DownLoadData_s>* getDownLoadData();
 
+        int      DoDownLoad();
+
     protected:
         int      DownloadDefaultCallback(double total_size, double downloaded_size, void* userdata);
         void     ResultDefaultCallback(int id, bool success, const std::string& data);
         double   GetDownloadFileSize();
-        int      DoDownload(ThreadChunk* thread_chunk);
+        //int      DoDownload(ThreadChunk* thread_chunk);
         int      SplitDownloadCount(double down_size);
         void  Reset(void);
 
@@ -76,13 +78,14 @@ class CHttpDown
         ResultCallback    m_result_callback;
 
         std::deque<DownLoadData_s> m_downLoadDataDeq;
+        CDownLoadTask m_downLoadTask;
 
         
         
 };
 
 
-class CDownLoadTask
+class CDownLoadTask:public CBaseTask
 {
     public:
         CDownLoadTask();

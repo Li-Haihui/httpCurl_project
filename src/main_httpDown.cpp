@@ -12,6 +12,5 @@ int main()
     for(int i = 0; i < downLoadData->size(); i++)
     {
         CDownLoadTask *downLoadTask = new CDownLoadTask();
-        
     }
 }
