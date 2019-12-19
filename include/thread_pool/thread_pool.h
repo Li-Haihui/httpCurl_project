@@ -1,7 +1,7 @@
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
 
-//#include "task_queue.h"
+#include "task_queue.h"
 
 class CThreadPool
 {
@@ -22,6 +22,7 @@ class CThreadPool
         int m_freethreadNum;
 		int m_poolClose;
         pthread_mutex_t m_mutex;
+        //pthread_cond_t m_threadFullCond;
 		pthread_cond_t m_threadNotEmptyCond;
         pthread_cond_t m_taskQueueEmptyCond;
 		std::deque<CBaseTask*> m_taskQueue;

@@ -19,17 +19,10 @@ void CThreadPool::run()
         {
             pthread_cond_wait(&m_taskQueueEmptyCond, &m_mutex);
         }
-		
-		if(m_poolClose)
-		{
-			pthread_mutex_unlock(&m_mutex);
-			pthread_exit(NULL);
-		}
         
         CBaseTask *task = NULL;
 		if(!m_taskQueue.empty())
         {
-
 			task = m_taskQueue.front();
 			m_taskQueue.pop_front();
         }
@@ -37,6 +30,12 @@ void CThreadPool::run()
 		if(m_taskQueue.empty())
 		{
 			pthread_cond_signal(&m_threadNotEmptyCond);
+		}
+
+		if(m_poolClose)
+		{
+			pthread_mutex_unlock(&m_mutex);
+			pthread_exit(NULL);
 		}
 
         if(task)
@@ -68,26 +67,24 @@ CThreadPool::~CThreadPool()
 		pthread_mutex_unlock(&m_mutex);
 		return;
 	}
-	
-	m_poolClose = 1;
+
 	while(!m_taskQueue.empty())
 	{
 		pthread_cond_wait(&m_threadNotEmptyCond, &m_mutex);
 	}
-	
+
 	m_poolClose = 1;
 
-    pthread_cond_broadcast(&m_taskQueueEmptyCond);
-
 	pthread_mutex_unlock(&m_mutex);
+    pthread_cond_broadcast(&m_taskQueueEmptyCond);
     for (int i = 0; i < m_threadNum; i++) 
     {
         pthread_join(m_pthreads[i], NULL);
     }
 
     pthread_mutex_destroy(&m_mutex);
+
     pthread_cond_destroy(&m_taskQueueEmptyCond);
-    pthread_cond_destroy(&m_threadNotEmptyCond);
     delete m_pthreads;
 }
 
