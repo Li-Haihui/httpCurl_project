@@ -51,6 +51,7 @@ size_t CDownLoadTask::write_callback(char *ptr, size_t size, size_t nmemb, void 
     downLoadData->data = malloc(size * nmemb);
     memcpy(downLoadData->data, ptr, size * nmemb);
     downLoadData->_endidx = downLoadData->_startidx + size * nmemb;
+    std::cout<<"begin:"<<size * nmemb<<std::endl;
     return size * nmemb;
 }
 
