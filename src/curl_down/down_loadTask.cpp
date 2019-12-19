@@ -1,13 +1,10 @@
 #include "down_loadTask.h"
 
+#include<cstring>
+
+
 CDownLoadTask::CDownLoadTask()
-    : m_downLoadType(0)
-    , m_timeOut(0)
-    , m_retrytimes(3)
-    , m_reqId(0)
-    , m_url(nullptr)
-    , m_downLoadData(NULL)
-    , CBaseTask(0)
+    :CBaseTask(0)
 {
    
 }
@@ -51,9 +48,10 @@ void CDownLoadTask::setRetryTimes(int retry_times)
 size_t CDownLoadTask::write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {    
     DownLoadData_s* downLoadData = reinterpret_cast<DownLoadData_s*>(userdata);
-    downLoadData->data = (void*)ptr;
+    downLoadData->data = malloc(size * nmemb);
+    memcpy(downLoadData->data, ptr, size * nmemb);
     downLoadData->_endidx = downLoadData->_startidx + size * nmemb;
-    return 0;
+    return size * nmemb;
 }
 
 

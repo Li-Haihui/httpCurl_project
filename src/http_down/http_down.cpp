@@ -138,12 +138,18 @@ int CHttpDown::doDownLoad()
 
     delete threadPool;
     FILE *fp;
-    fp = fopen(m_downfile_path.c_str(),"wb");
+    fp = fopen(m_downfile_path.c_str(),"wb+");
+    if(fp == NULL)
+    {
+        std::cout<<"fopen failed"<<std::endl;
+    }
     size_t tolteWriteSize = 0;
     for(int i = 0; i < splitCount; i++)
     {
         size_t written;
+        std::cout<<m_downLoadDataVec[i]._startidx<<"-"<<m_downLoadDataVec[i]._endidx<<std::endl;
         fseek(fp, m_downLoadDataVec[i]._startidx, SEEK_SET);
+        std::cout<<m_downLoadDataVec[i]._startidx<<"-"<<m_downLoadDataVec[i]._endidx<<std::endl;
         written = fwrite(m_downLoadDataVec[i].data, 1, m_downLoadDataVec[i]._endidx - m_downLoadDataVec[i]._startidx + 1, fp);
         tolteWriteSize += written;
     }
