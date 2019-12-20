@@ -3,13 +3,12 @@
 #include "thread_pool.h"
 
 CHttpDown::CHttpDown()
-    : m_retry_times(3)
-    , m_thread_count(5)
-    , m_http_code(0)
-    , m_time_out(0)
-    , m_mutex(PTHREAD_MUTEX_INITIALIZER)
 {
-
+    m_retry_times = 3;
+    m_thread_count = 5;
+    m_http_code = 0;
+    m_time_out = 0;
+    m_mutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
 CHttpDown::~CHttpDown()
@@ -59,7 +58,6 @@ double CHttpDown::getDownloadFileSize()
         	curl_easy_setopt (handle, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36"); //user-agent
 
             curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);
-            curl_easy_setopt(handle, CURLOPT_RANGE, "2-");
 
             CURLcode curl_code = curl_easy_perform(handle);
 
@@ -83,8 +81,9 @@ double CHttpDown::getDownloadFileSize()
             }
             else
             {
-               std::cout<<"cur_code:"<<curl_code<<" m_http_code:"<<m_http_code<<std::endl;
                const char* err_string = curl_easy_strerror(curl_code);
+               std::cout<<"cur_code:"<<curl_code<<" m_http_code:"<<m_http_code<<" err:"<<err_string<<std::endl;
+
             }            
 
             curl_easy_cleanup(handle);
@@ -97,20 +96,22 @@ double CHttpDown::getDownloadFileSize()
 
 int CHttpDown::splitDownloadCount(double down_size)
 {
-    const double size_20mb = 20.0 * 1024 * 1024;
+    const double size_mb = 10 * 1024;
     double startIdx = 0.0;
     int splitDownLoadCount = 0;
+    double tempDown_size = down_size;
 
-    while(down_size > 0)
+    while(tempDown_size > 0)
     {
-        double tempDown_size = down_size;
         DownLoadData_s downLoadData;
         downLoadData._startidx = startIdx;
-        downLoadData._endidx = (tempDown_size - size_20mb) > 0 ? size_20mb: tempDown_size;
+        double tempWriteSize = (tempDown_size - size_mb) > 0 ? size_mb: tempDown_size;
+        downLoadData._endidx = startIdx + tempWriteSize - 1;
+        downLoadData.data = (char*)malloc(downLoadData._endidx - downLoadData._startidx + 1);
         m_downLoadDataVec.push_back(downLoadData);
-        std::cout<<downLoadData._startidx<<"-"<<downLoadData._endidx<<std::endl;
-        startIdx = downLoadData._endidx;
-        down_size = down_size - (downLoadData._endidx - downLoadData._startidx);
+        //std::cout<<downLoadData._startidx<<"-"<<downLoadData._endidx<<std::endl;
+        startIdx = downLoadData._endidx + 1;
+        tempDown_size = tempDown_size - (downLoadData._endidx - downLoadData._startidx + 1);
         splitDownLoadCount++;
     }
 
@@ -124,11 +125,13 @@ int CHttpDown::doDownLoad()
     int splitCount = splitDownloadCount(down_size);
     std::cout<<"splitCount:"<<splitCount<<std::endl;
     CDownLoadTask *m_task = new CDownLoadTask[splitCount];
-    CThreadPool *threadPool =new CThreadPool(1);
+    int threadNum = splitCount > m_thread_count ? m_thread_count : splitCount;
+    CThreadPool *threadPool =new CThreadPool(threadNum);
     threadPool->start();
     for(int i = 0; i < splitCount; i++)
     {
         m_task[i].setRequestUrl(m_url);
+        m_task[i].setReqId(i);
         m_task[i].setDownLoadType(0);
         m_task[i].setDownLoadTaskData(&m_downLoadDataVec[i]);
         m_task[i].setRetryTimes(m_retry_times);
@@ -138,7 +141,7 @@ int CHttpDown::doDownLoad()
 
     delete threadPool;
     FILE *fp;
-    fp = fopen(m_downfile_path.c_str(),"wb+");
+    fp = fopen(m_downfile_path.c_str(),"wb");
     if(fp == NULL)
     {
         std::cout<<"fopen failed"<<std::endl;
@@ -147,13 +150,15 @@ int CHttpDown::doDownLoad()
     for(int i = 0; i < splitCount; i++)
     {
         size_t written;
-        std::cout<<m_downLoadDataVec[i]._startidx<<"-"<<m_downLoadDataVec[i]._endidx<<std::endl;
+        //std::cout<<m_downLoadDataVec[i]._startidx<<"-"<<m_downLoadDataVec[i]._endidx<<std::endl;
         fseek(fp, m_downLoadDataVec[i]._startidx, SEEK_SET);
         std::cout<<m_downLoadDataVec[i]._startidx<<"-"<<m_downLoadDataVec[i]._endidx<<std::endl;
         written = fwrite(m_downLoadDataVec[i].data, 1, m_downLoadDataVec[i]._endidx - m_downLoadDataVec[i]._startidx + 1, fp);
+        std::cout<<m_downLoadDataVec[i]._startidx<<"-"<<m_downLoadDataVec[i]._endidx<<" writeSize:"<<written<<std::endl;
         tolteWriteSize += written;
     }
 
     fclose(fp);
+    return 0;
 }
 

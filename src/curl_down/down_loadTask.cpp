@@ -4,9 +4,9 @@
 
 
 CDownLoadTask::CDownLoadTask()
-    :CBaseTask(0)
+    : CBaseTask(0)
 {
-   
+    m_reqId = 0;
 }
 
 CDownLoadTask::~CDownLoadTask()
@@ -14,14 +14,16 @@ CDownLoadTask::~CDownLoadTask()
     
 }
 
+void CDownLoadTask::setReqId(int reqId)
+{
+    m_reqId= reqId;
+    CBaseTask(m_reqId);
+}
+
+
 void CDownLoadTask::setDownLoadType(int downLoadType)
 {
     m_downLoadType = downLoadType;
-}
-
-void CDownLoadTask::setReqId(int reqId)
-{
-    m_reqId = reqId;
 }
 
 void CDownLoadTask::setDownLoadTaskData(DownLoadData_s *downLoadData)
@@ -48,10 +50,9 @@ void CDownLoadTask::setRetryTimes(int retry_times)
 size_t CDownLoadTask::write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {    
     DownLoadData_s* downLoadData = reinterpret_cast<DownLoadData_s*>(userdata);
-    downLoadData->data = malloc(size * nmemb);
-    memcpy(downLoadData->data, ptr, size * nmemb);
-    downLoadData->_endidx = downLoadData->_startidx + size * nmemb;
-    std::cout<<"begin:"<<size * nmemb<<std::endl;
+    std::cout<<"begin:"<<downLoadData->_curridx<<" size:"<<size * nmemb<<std::endl;
+    memcpy((uint8_t *)downLoadData->data + downLoadData->_curridx, ptr, size * nmemb);
+    downLoadData->_curridx = downLoadData->_curridx + size * nmemb;
     return size * nmemb;
 }
 
@@ -60,13 +61,6 @@ int CDownLoadTask::workTaskFun()
 {
     std::cout<<"begin"<<std::endl;
     CURL* curl_handle = curl_easy_init();
-    //HttpHelper::set_share_handle(curl_handle);
-
-    if (m_url.substr(0, 5) == "https")
-    {
-        curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
-        curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 0L);
-    }
 
     curl_easy_setopt(curl_handle, CURLOPT_URL, m_url.c_str());
 
@@ -102,7 +96,7 @@ int CDownLoadTask::workTaskFun()
         }
         
         down_range = ostr.str();
-        std::cout<<"down_range:"<<down_range<<std::endl;
+        std::cout<<"m_reqId:"<<m_reqId<<"%%%%"<<"down_range:"<<down_range<<std::endl;
         curl_easy_setopt(curl_handle, CURLOPT_RANGE, down_range.c_str());
     }
 
@@ -122,15 +116,13 @@ int CDownLoadTask::workTaskFun()
     curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
     if (curl_code == CURLE_OK && (http_code >= 200 && http_code <= 300))
     {
-            //m_http_code = http_code;
-            std::cout<<"cur_code:"<<curl_code<<" m_http_code:"<<http_code<<std::endl;
+        std::cout<<"cur_code:"<<curl_code<<" http_code:"<<http_code<<std::endl;
     }
     else
     {
-            std::cout<<"cur_code:"<<curl_code<<" m_http_code:"<<http_code<<std::endl;
-            const char* err_string = curl_easy_strerror(curl_code);
-            //m_error_string = err_string;
-            //m_http_code = http_code;
+        const char* err_string = curl_easy_strerror(curl_code);
+        std::cout<<"cur_code:"<<curl_code<<" http_code:"<<http_code<<" err:"<<err_string<<std::endl;
+            
     }
 
     curl_easy_cleanup(curl_handle);

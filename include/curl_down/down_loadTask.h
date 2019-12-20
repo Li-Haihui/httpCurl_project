@@ -17,8 +17,17 @@
 typedef struct tagDownLoadData
 {
     long        _startidx;
+    long        _curridx;
     long        _endidx;
-    void        *data;
+    char        *data;
+    
+    tagDownLoadData()
+    {
+        _startidx = 0;
+        _curridx = 0;
+        _endidx = 0;
+        data = NULL;
+    }
     
 }DownLoadData_s;
 
@@ -28,7 +37,7 @@ class CDownLoadTask:public CBaseTask
         CDownLoadTask();
         ~CDownLoadTask();
         void      setRequestUrl(const std::string& url);
-        void      setReqId(int reqId = 0) ;
+        void      setReqId(int reqId = 0);
         void      setTimeout(long time_out = 0);
         void      setDownLoadType(int       downLoadType = 0);
         void      setDownLoadTaskData(DownLoadData_s *downLoadData);

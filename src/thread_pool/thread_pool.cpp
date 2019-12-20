@@ -41,6 +41,10 @@ void CThreadPool::run()
         if(task)
         {
             int ret = task->workTaskFun();
+            if (ret != 0)
+            {
+                m_taskQueue.push_back(task);
+            }
         }
 		
         pthread_mutex_unlock(&m_mutex);
