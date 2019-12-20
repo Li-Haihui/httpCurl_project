@@ -31,9 +31,9 @@ void CDownLoadTask::setDownLoadTaskData(DownLoadData_s *downLoadData)
     m_downLoadData = downLoadData;
 }
 
-void CDownLoadTask::setTimeout(long time_Out)
+void CDownLoadTask::setTimeout(long timeOut)
 {
-    m_timeOut = time_Out;
+    m_timeOut = timeOut;
 }
 
 
@@ -42,9 +42,9 @@ void CDownLoadTask::setRequestUrl(const std::string &url)
     m_url = url;
 }
 
-void CDownLoadTask::setRetryTimes(int retry_times)
+void CDownLoadTask::setRetryTimes(int retryTimes)
 {
-    m_retrytimes = retry_times;
+    m_retrytimes = retryTimes;
 }
 
 size_t CDownLoadTask::write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)

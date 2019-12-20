@@ -4,10 +4,10 @@
 
 CHttpDown::CHttpDown()
 {
-    m_retry_times = 3;
-    m_thread_count = 5;
-    m_http_code = 0;
-    m_time_out = 0;
+    m_retryTimes = 3;
+    m_threadCount = 5;
+    m_httpCode = 0;
+    m_timeOut = 0;
     m_mutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
@@ -23,15 +23,15 @@ int CHttpDown::setRequestUrl(const std::string & url)
 }
 
 
-int CHttpDown::setTimeout(long time_out)
+int CHttpDown::setTimeout(long timeOut)
 {
-    m_time_out = time_out;
+    m_timeOut = timeOut;
     return 0;
 }
 
-int CHttpDown::setDownloadFile(const std::string & file_name)
+int CHttpDown::setDownloadFile(const std::string & fileName)
 {
-    m_downfile_path = file_name;
+    m_downfilePath = fileName;
     return 0;
 }
 
@@ -59,30 +59,30 @@ double CHttpDown::getDownloadFileSize()
 
             curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);
 
-            CURLcode curl_code = curl_easy_perform(handle);
+            CURLcode curlCode = curl_easy_perform(handle);
 
-            if (curl_code == CURLE_OPERATION_TIMEDOUT)
+            if (curlCode == CURLE_OPERATION_TIMEDOUT)
             {
-                int retry_count = m_retry_times;
-                while (retry_count > 0)
+                int retryCount = m_retryTimes;
+                while (retryCount > 0)
                 {
-                    curl_code = curl_easy_perform(handle);
-                    if (curl_code != CURLE_OPERATION_TIMEDOUT) break;
-                    retry_count--;
+                    curlCode = curl_easy_perform(handle);
+                    if (curlCode != CURLE_OPERATION_TIMEDOUT) break;
+                    retryCount--;
                 }
             }
 
-            curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &m_http_code);
+            curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &m_httpCode);
 
-            if (curl_code == CURLE_OK)
+            if (curlCode == CURLE_OK)
             {
-                std::cout<<"cur_code:"<<curl_code<<" m_http_code:"<<m_http_code<<std::endl;
+                std::cout<<"cur_code:"<<curlCode<<" m_httpCode:"<<m_httpCode<<std::endl;
                 curl_easy_getinfo(handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &down_file_length);
             }
             else
             {
-               const char* err_string = curl_easy_strerror(curl_code);
-               std::cout<<"cur_code:"<<curl_code<<" m_http_code:"<<m_http_code<<" err:"<<err_string<<std::endl;
+               const char* err_string = curl_easy_strerror(curlCode);
+               std::cout<<"cur_code:"<<curlCode<<" m_httpCode:"<<m_httpCode<<" err:"<<err_string<<std::endl;
 
             }            
 
@@ -94,24 +94,24 @@ double CHttpDown::getDownloadFileSize()
     }
 }
 
-int CHttpDown::splitDownloadCount(double down_size)
+int CHttpDown::splitDownloadCount(double downSize)
 {
     const double size_mb = 10 * 1024;
     double startIdx = 0.0;
     int splitDownLoadCount = 0;
-    double tempDown_size = down_size;
+    double tempdownSize = downSize;
 
-    while(tempDown_size > 0)
+    while(tempdownSize > 0)
     {
         DownLoadData_s downLoadData;
         downLoadData._startidx = startIdx;
-        double tempWriteSize = (tempDown_size - size_mb) > 0 ? size_mb: tempDown_size;
+        double tempWriteSize = (tempdownSize - size_mb) > 0 ? size_mb: tempdownSize;
         downLoadData._endidx = startIdx + tempWriteSize - 1;
         downLoadData.data = (char*)malloc(downLoadData._endidx - downLoadData._startidx + 1);
         m_downLoadDataVec.push_back(downLoadData);
         //std::cout<<downLoadData._startidx<<"-"<<downLoadData._endidx<<std::endl;
         startIdx = downLoadData._endidx + 1;
-        tempDown_size = tempDown_size - (downLoadData._endidx - downLoadData._startidx + 1);
+        tempdownSize = tempdownSize - (downLoadData._endidx - downLoadData._startidx + 1);
         splitDownLoadCount++;
     }
 
@@ -121,11 +121,11 @@ int CHttpDown::splitDownloadCount(double down_size)
 
 int CHttpDown::doDownLoad()
 {
-    double down_size = getDownloadFileSize();
-    int splitCount = splitDownloadCount(down_size);
+    double downSize = getDownloadFileSize();
+    int splitCount = splitDownloadCount(downSize);
     std::cout<<"splitCount:"<<splitCount<<std::endl;
     CDownLoadTask *m_task = new CDownLoadTask[splitCount];
-    int threadNum = splitCount > m_thread_count ? m_thread_count : splitCount;
+    int threadNum = splitCount > m_threadCount ? m_threadCount : splitCount;
     CThreadPool *threadPool =new CThreadPool(threadNum);
     threadPool->start();
     for(int i = 0; i < splitCount; i++)
@@ -134,14 +134,14 @@ int CHttpDown::doDownLoad()
         m_task[i].setReqId(i);
         m_task[i].setDownLoadType(0);
         m_task[i].setDownLoadTaskData(&m_downLoadDataVec[i]);
-        m_task[i].setRetryTimes(m_retry_times);
-        m_task[i].setTimeout(m_time_out);
+        m_task[i].setRetryTimes(m_retryTimes);
+        m_task[i].setTimeout(m_timeOut);
         threadPool->addTask(&m_task[i]);
     }
 
     delete threadPool;
     FILE *fp;
-    fp = fopen(m_downfile_path.c_str(),"wb");
+    fp = fopen(m_downfilePath.c_str(),"wb");
     if(fp == NULL)
     {
         std::cout<<"fopen failed"<<std::endl;

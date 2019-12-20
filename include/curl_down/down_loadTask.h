@@ -38,10 +38,10 @@ class CDownLoadTask:public CBaseTask
         ~CDownLoadTask();
         void      setRequestUrl(const std::string& url);
         void      setReqId(int reqId = 0);
-        void      setTimeout(long time_out = 0);
+        void      setTimeout(long timeOut = 0);
         void      setDownLoadType(int       downLoadType = 0);
         void      setDownLoadTaskData(DownLoadData_s *downLoadData);
-        void      setRetryTimes(int retry_times = 1);
+        void      setRetryTimes(int retryTimes = 1);
         virtual int workTaskFun();
 
    private:
